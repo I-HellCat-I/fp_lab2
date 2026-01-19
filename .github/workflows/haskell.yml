@@ -21,12 +21,22 @@ jobs:
         enable-stack: true
         stack-version: 'latest'
 
-    # --- ШАГ 1: ЛИНТЕР ---
+    
+    # --- ШАГ 1: Форматирование ---
+    - name: Check formatting (Ormolu)
+      uses: mrkkrp/ormolu-action@v17
+      with:
+        patterns: |
+          src/**/*.hs
+          app/**/*.hs
+          test/**/*.hs
+
+    # --- ШАГ 2: ЛИНТЕР ---
     - name: Run HLint
       run: curl -sL https://raw.github.com/ndmitchell/hlint/master/misc/run.sh | sh -s src test
 
 
-    # --- ШАГ 2: КЕШИРОВАНИЕ ---
+    # --- ШАГ 3: КЕШИРОВАНИЕ ---
     - name: Cache ~/.stack
       uses: actions/cache@v3
       with:
@@ -35,14 +45,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-stack-
 
-    # --- ШАГ 3: УСТАНОВКА ЗАВИСИМОСТЕЙ ---
+    # --- ШАГ 4: УСТАНОВКА ЗАВИСИМОСТЕЙ ---
     - name: Install dependencies
       run: stack build --only-dependencies
 
-    # --- ШАГ 4: СБОРКА ПРОЕКТА ---
+    # --- ШАГ 5: СБОРКА ПРОЕКТА ---
     - name: Build
       run: stack build
 
-    # --- ШАГ 5: ТЕСТЫ ---
+    # --- ШАГ 6: ТЕСТЫ ---
     - name: Run Tests
       run: stack test
