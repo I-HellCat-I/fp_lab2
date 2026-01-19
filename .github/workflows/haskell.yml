@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build, Lint and Test
     runs-on: ubuntu-latest
     
     steps:
@@ -21,6 +21,14 @@ jobs:
         enable-stack: true
         stack-version: 'latest'
 
+    # --- ШАГ 1: ЛИНТЕР ---
+    - name: Run HLint
+      uses: haskell-actions/hlint-run@v2
+      with:
+        path: '["src/", "test/"]'
+        fail-on: warning
+
+    # --- ШАГ 2: КЕШИРОВАНИЕ ---
     - name: Cache ~/.stack
       uses: actions/cache@v3
       with:
@@ -29,15 +37,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-stack-
 
+    # --- ШАГ 3: УСТАНОВКА ЗАВИСИМОСТЕЙ ---
     - name: Install dependencies
       run: stack build --only-dependencies
 
-    - name: Run HLint
-      run: |
-        curl -sL https://raw.github.com/ndmitchell/hlint/master/misc/run.sh | sh -s src test
-
+    # --- ШАГ 4: СБОРКА ПРОЕКТА ---
     - name: Build
       run: stack build
 
+    # --- ШАГ 5: ТЕСТЫ ---
     - name: Run Tests
       run: stack test
