@@ -1,0 +1,40 @@
+name:                oa-bag
+version:             0.1.0.0
+github:              "githubuser/oa-bag"
+
+extra-source-files:
+- README.md
+
+# Глобальные зависимости
+dependencies:
+- base >= 4.7
+- vector
+- hashable
+
+# Настройки для библиотеки (src/OABag.hs)
+library:
+  source-dirs: src
+  ghc-options:
+  - -Wall
+  - -Werror
+  # -Wcompat
+  # -Widentities
+  # -Wincomplete-record-updates
+  # -Wincomplete-uni-patterns
+
+# Настройки для тестов (test/Spec.hs)
+tests:
+  oa-bag-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    - -Werror
+
+    dependencies:
+    - oa-bag
+    - hspec
+    - QuickCheck

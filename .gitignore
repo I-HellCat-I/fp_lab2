@@ -1,0 +1,31 @@
+# Stack build artifacts
+.stack-work/
+stack.yaml.lock
+
+# Cabal build artifacts (если вдруг запустите через cabal напрямую)
+dist/
+dist-newstyle/
+
+# Generated cabal files (так как вы используете package.yaml)
+*.cabal
+
+# Compiled object files and interfaces
+*.o
+*.hi
+*.chi
+*.dyn_o
+*.dyn_hi
+*.prof
+*.aux
+*.hp
+*.eventlog
+
+# Executables
+*.exe
+
+# IDE & OS settings
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
