@@ -2,23 +2,24 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module OABag
-  ( OABag
-  , empty
-  , insert
-  , remove
-  , size
-  , toList
-  , fromList
-  , count
-  , filterBag
-  , mapBag
-  , foldlBag
-  , foldrBag
-  ) where
+  ( OABag,
+    empty,
+    insert,
+    remove,
+    size,
+    toList,
+    fromList,
+    count,
+    filterBag,
+    mapBag,
+    foldlBag,
+    foldrBag,
+  )
+where
 
-import qualified Data.Vector as V
 import Data.Hashable (Hashable, hash)
 import qualified Data.List as L
+import qualified Data.Vector as V
 import GHC.Generics (Generic)
 import Prelude hiding (lookup)
 
@@ -31,11 +32,12 @@ data Slot a
 
 -- | Структура данных Bag (Multiset) на основе Open Addressing.
 data OABag a = OABag
-  { capacity  :: Int
-  , load      :: Int 
-  , size :: Int
-  , table     :: V.Vector (Slot a)
-  } deriving (Show, Generic)
+  { capacity :: Int,
+    load :: Int,
+    size :: Int,
+    table :: V.Vector (Slot a)
+  }
+  deriving (Show, Generic)
 
 -- | Константы
 initialCapacity :: Int
@@ -46,12 +48,13 @@ maxLoadFactor = 0.7
 
 -- | Создание пустого Bag
 empty :: OABag a
-empty = OABag
-  { capacity  = initialCapacity
-  , load      = 0
-  , size = 0
-  , table     = V.replicate initialCapacity Free
-  }
+empty =
+  OABag
+    { capacity = initialCapacity,
+      load = 0,
+      size = 0,
+      table = V.replicate initialCapacity Free
+    }
 
 -- | Хелпер: получение индекса
 idx :: (Hashable a) => a -> Int -> Int
@@ -78,94 +81,103 @@ insert key bag
   | otherwise =
       let cap = capacity bag
           startI = idx key cap
-          
+
           findSlot i attempts
             | attempts >= cap = error "OABag full (should have resized)"
             | otherwise = case table bag V.! i of
-                Occupied k c | k == key -> 
-                    bag { size = size bag + 1
-                        , table = V.update (table bag) (V.singleton (i, Occupied key (c + 1))) 
+                Occupied k c
+                  | k == key ->
+                      bag
+                        { size = size bag + 1,
+                          table = V.update (table bag) (V.singleton (i, Occupied key (c + 1)))
                         }
-                Free -> 
-                    bag { load = load bag + 1
-                        , size = size bag + 1
-                        , table = V.update (table bag) (V.singleton (i, Occupied key 1)) 
-                        }
-                Deleted -> 
-                    findSlotWithDeleted i attempts i 
-                Occupied _ _ -> 
-                    findSlot ((i + 1) `rem` cap) (attempts + 1)
+                Free ->
+                  bag
+                    { load = load bag + 1,
+                      size = size bag + 1,
+                      table = V.update (table bag) (V.singleton (i, Occupied key 1))
+                    }
+                Deleted ->
+                  findSlotWithDeleted i attempts i
+                Occupied _ _ ->
+                  findSlot ((i + 1) `rem` cap) (attempts + 1)
 
           findSlotWithDeleted i attempts firstDelIdx
-             | attempts >= cap = insertAtDeleted firstDelIdx
-             | otherwise = case table bag V.! i of
-                 Free -> insertAtDeleted firstDelIdx
-                 Occupied k c | k == key -> 
-                     bag { size = size bag + 1
-                         , table = V.update (table bag) (V.singleton (i, Occupied key (c + 1))) 
-                         }
-                 _ -> findSlotWithDeleted ((i + 1) `rem` cap) (attempts + 1) firstDelIdx
+            | attempts >= cap = insertAtDeleted firstDelIdx
+            | otherwise = case table bag V.! i of
+                Free -> insertAtDeleted firstDelIdx
+                Occupied k c
+                  | k == key ->
+                      bag
+                        { size = size bag + 1,
+                          table = V.update (table bag) (V.singleton (i, Occupied key (c + 1)))
+                        }
+                _ -> findSlotWithDeleted ((i + 1) `rem` cap) (attempts + 1) firstDelIdx
 
-          insertAtDeleted i = 
-              bag { load = load bag
-                  , size = size bag + 1
-                  , table = V.update (table bag) (V.singleton (i, Occupied key 1)) 
-                  }
-
-      in findSlot startI 0
+          insertAtDeleted i =
+            bag
+              { load = load bag,
+                size = size bag + 1,
+                table = V.update (table bag) (V.singleton (i, Occupied key 1))
+              }
+       in findSlot startI 0
 
 -- | Удаление элемента
 remove :: (Hashable a, Eq a) => a -> OABag a -> OABag a
-remove key bag = 
-    let cap = capacity bag
-        startI = idx key cap
-        
-        go i attempts
-          | attempts >= cap = bag
-          | otherwise = case table bag V.! i of
-              Free -> bag
-              Deleted -> go ((i + 1) `rem` cap) (attempts + 1)
-              Occupied k c 
-                | k == key -> 
-                    if c > 1 
-                    then bag { size = size bag - 1
-                             , table = V.update (table bag) (V.singleton (i, Occupied key (c - 1))) 
-                             }
-                    else bag { size = size bag - 1
-                             , table = V.update (table bag) (V.singleton (i, Deleted)) 
-                             }
-                | otherwise -> go ((i + 1) `rem` cap) (attempts + 1)
-    in go startI 0
+remove key bag =
+  let cap = capacity bag
+      startI = idx key cap
+
+      go i attempts
+        | attempts >= cap = bag
+        | otherwise = case table bag V.! i of
+            Free -> bag
+            Deleted -> go ((i + 1) `rem` cap) (attempts + 1)
+            Occupied k c
+              | k == key ->
+                  if c > 1
+                    then
+                      bag
+                        { size = size bag - 1,
+                          table = V.update (table bag) (V.singleton (i, Occupied key (c - 1)))
+                        }
+                    else
+                      bag
+                        { size = size bag - 1,
+                          table = V.update (table bag) (V.singleton (i, Deleted))
+                        }
+              | otherwise -> go ((i + 1) `rem` cap) (attempts + 1)
+   in go startI 0
 
 -- | Внутренний fold по слотам (исправленный для HLint)
 foldrSlot :: (a -> Int -> b -> b) -> b -> V.Vector (Slot a) -> b
 foldrSlot f = V.foldr step
   where
     step slot acc = case slot of
-        Occupied k c -> f k c acc
-        _            -> acc
+      Occupied k c -> f k c acc
+      _ -> acc
 
 -- | Увеличение размера таблицы и рехеширование
 resize :: (Hashable a, Eq a) => OABag a -> OABag a
-resize bag = 
-    let newCap = capacity bag * 2
-        newTable = V.replicate newCap Free
-        
-        rawInsert vec (k, c) = 
-            let start = idx k newCap
-                probe j = case vec V.! j of
-                    Free -> V.update vec (V.singleton (j, Occupied k c))
-                    _    -> probe ((j + 1) `rem` newCap)
-            in probe start
-        
-        allElems = foldrSlot (\k c acc -> (k,c):acc) [] (table bag)
-        filledTable = L.foldl' rawInsert newTable allElems
-        
-    in OABag { capacity = newCap
-             , load = length allElems
-             , size = size bag
-             , table = filledTable 
-             }
+resize bag =
+  let newCap = capacity bag * 2
+      newTable = V.replicate newCap Free
+
+      rawInsert vec (k, c) =
+        let start = idx k newCap
+            probe j = case vec V.! j of
+              Free -> V.update vec (V.singleton (j, Occupied k c))
+              _ -> probe ((j + 1) `rem` newCap)
+         in probe start
+
+      allElems = foldrSlot (\k c acc -> (k, c) : acc) [] (table bag)
+      filledTable = L.foldl' rawInsert newTable allElems
+   in OABag
+        { capacity = newCap,
+          load = length allElems,
+          size = size bag,
+          table = filledTable
+        }
 
 -- | Преобразование в список
 toList :: OABag a -> [a]
@@ -183,8 +195,8 @@ mapBag f bag = foldrSlot (insertCount . f) empty (table bag)
 
 -- | Filter (исправленный: удален мертвый код)
 filterBag :: (Hashable a, Eq a) => (a -> Bool) -> OABag a -> OABag a
-filterBag predicate bag = 
-    fromList $ filter predicate $ toList bag
+filterBag predicate bag =
+  fromList $ filter predicate $ toList bag
 
 -- | Свертки
 foldrBag :: (a -> b -> b) -> b -> OABag a -> b
@@ -195,21 +207,21 @@ foldlBag f z bag = L.foldl' f z (toList bag)
 
 -- | Реализация Eq
 instance (Hashable a, Eq a) => Eq (OABag a) where
-    b1 == b2 = 
-        size b1 == size b2 &&
-        subBag b1 b2
-      where
-        subBag bagA bagB = 
-            foldrSlot (\k c acc -> acc && count k bagB == c) True (table bagA)
+  b1 == b2 =
+    size b1 == size b2
+      && subBag b1 b2
+    where
+      subBag bagA bagB =
+        foldrSlot (\k c acc -> acc && count k bagB == c) True (table bagA)
 
 -- | Реализация Semigroup и Monoid
 instance (Hashable a, Eq a) => Semigroup (OABag a) where
-    b1 <> b2 = foldrBag insert b2 b1
+  b1 <> b2 = foldrBag insert b2 b1
 
 instance (Hashable a, Eq a) => Monoid (OABag a) where
-    mempty = empty
+  mempty = empty
 
 -- | Реализация Foldable
 instance Foldable OABag where
-    foldr = foldrBag
-    foldl = foldlBag
+  foldr = foldrBag
+  foldl = foldlBag
