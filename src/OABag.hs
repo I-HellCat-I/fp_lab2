@@ -149,7 +149,7 @@ remove key bag =
               | otherwise -> go ((i + 1) `rem` cap) (attempts + 1)
    in go startI 0
 
--- | Внутренний fold по слотам (исправленный для HLint)
+-- | Внутренний fold по слотам
 foldrSlot :: (a -> Int -> b -> b) -> b -> V.Vector (Slot a) -> b
 foldrSlot f = V.foldr step
   where
@@ -187,13 +187,13 @@ toList bag = foldrSlot (\k c acc -> replicate c k ++ acc) [] (table bag)
 fromList :: (Hashable a, Eq a) => [a] -> OABag a
 fromList = L.foldl' (flip insert) empty
 
--- | Map (исправленный для HLint)
+-- | Map
 mapBag :: (Hashable a, Eq a, Hashable b, Eq b) => (a -> b) -> OABag a -> OABag b
 mapBag f bag = foldrSlot (insertCount . f) empty (table bag)
   where
     insertCount k c b = iterate (insert k) b !! c
 
--- | Filter (исправленный: удален мертвый код)
+-- | Filter
 filterBag :: (Hashable a, Eq a) => (a -> Bool) -> OABag a -> OABag a
 filterBag predicate bag =
   fromList $ filter predicate $ toList bag

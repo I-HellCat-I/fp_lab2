@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 -- Игнорируем правила HLint т.к тестируем свойства моноида
 {- HLINT ignore "Monoid law, left identity" -}
 {- HLINT ignore "Monoid law, right identity" -}
