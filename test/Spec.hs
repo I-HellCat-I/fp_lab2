@@ -79,6 +79,18 @@ main = hspec $ do
       let b' = Bag.mapBag (const (0 :: Int)) b
       Bag.count 0 b' `shouldBe` 2
 
+    it "should compare Bags correctly regardless of insertion order" $ do
+      let b1 = Bag.fromList ([1, 2, 3, 1] :: [Int])
+      let b2 = Bag.fromList ([3, 1, 1, 2] :: [Int])
+
+      b1 `shouldBe` b2
+
+      let b3 = Bag.insert 1 b1
+      b1 `shouldNotBe` b3
+
+      let b4 = Bag.fromList ([1, 2, 4, 1] :: [Int])
+      b1 `shouldNotBe` b4
+
   describe "OABag Properties" $ do
     it "Monoid Left Identity" $ property prop_monoid_identity_left
     it "Monoid Right Identity" $ property prop_monoid_identity_right
